@@ -6,7 +6,7 @@ trait HasToken
 {
     public function createToken()
     {
-        \Token::create([])
+        \Token::create([]);
     }
 
     public function refrashToken()

@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 //TODO: должен проверяться через сервис
 //$service = app('JwtService')
 //$service->decryptToken() //array('id' => 1, 'modelName' => 'User')
-//TODO: Доделать логику дешифровки
+//TODO: Доделать логику дешифровки ++
 //TODO: Доделать логику создания токена
 //TODO: Доделать логику сброса токена
 //TODO: Зарегистрировать собственные роуты пакета (запросить токен, сбросить токен)
@@ -47,6 +47,10 @@ class Token extends Model
         'y' => 25,
         'z' => 26,
     ];
+    protected static function flipCryptABC(): array
+    {
+        return array_flip(self::CRYPT_ABC);
+    }
     protected $fillable = [
         'token'
     ];
@@ -59,16 +63,17 @@ class Token extends Model
 
     static function randomStr(int $length): string
     {
-        $array = array_flip(self::CRYPT_ABC);
+        $flipABC = self::flipCryptABC();
         $str = '';
         for ($i = 0; $i < $length; $i++) {
-            $str .= $array[rand(1, count($array) - 1)];
+            $str .= $flipABC[rand(1, count($flipABC) - 1)];
         }
 
         return $str;
     }
 
-
+    // CyberLama\JwtAuth\Models\Token::decryptModelName("nggtv81hd5fb91milb12")
+    // CyberLama\JwtAuth\Models\Token::cryptModelName("User")
     static function cryptModelName(string $modelName): string
     {
         $str = str_split(strtolower($modelName));
@@ -83,7 +88,17 @@ class Token extends Model
 
     static function decryptModelName(string $cryptStr):string
     {
+        //заменяем буквенные символы на *
+        $newStr = strrev(preg_replace('/[^0-9]/', '*', $cryptStr));
+        //добавляем в массив числа разделенные *
+        $array = array_diff(explode("*", $newStr), array(''));
+        $flipABC = self::flipCryptABC();
 
+        $out = '';
+        foreach ($array as $item){
+            $out .= $flipABC[$item];
+        }
+        return $out;
     }
 
     static function create(Model $model)
