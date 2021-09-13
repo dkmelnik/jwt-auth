@@ -3,6 +3,7 @@
 namespace CyberLama\JwtAuth\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 //TODO: Сделать и зарегистрировать middleware на проверку токена и авторизацию, токен
@@ -47,10 +48,12 @@ class Token extends Model
         'y' => 25,
         'z' => 26,
     ];
+
     protected static function flipCryptABC(): array
     {
         return array_flip(self::CRYPT_ABC);
     }
+
     protected $fillable = [
         'token'
     ];
@@ -80,13 +83,13 @@ class Token extends Model
 
         $out = '';
         foreach ($str as $item) {
-            $out .= self::CRYPT_ABC[$item] . self::randomStr(rand(1,5));
+            $out .= self::CRYPT_ABC[$item] . self::randomStr(rand(1, 5));
         }
 
         return strrev($out);
     }
 
-    static function decryptModelName(string $cryptStr):string
+    static function decryptModelName(string $cryptStr): string
     {
         //заменяем буквенные символы на *
         $newStr = strrev(preg_replace('/[^0-9]/', '*', $cryptStr));
@@ -95,15 +98,30 @@ class Token extends Model
         $flipABC = self::flipCryptABC();
 
         $out = '';
-        foreach ($array as $item){
+        foreach ($array as $item) {
             $out .= $flipABC[$item];
         }
         return $out;
     }
 
+    static function generateToken()
+    {
+
+    }
+
+
     static function create(Model $model)
     {
-        $token = new self();
+        $tokenModel = new self();
+
+        $values = [
+            'token' => 'London to Paris',
+            'model' => class_basename($model),
+            'ttl' => Carbon::now()->addDays(30)->timestamp,
+            'model_id' => $model["id"],
+        ];
+
+        $tokenModel::create($values);
 
     }
 }

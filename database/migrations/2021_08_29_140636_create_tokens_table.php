@@ -17,7 +17,7 @@ class CreateTokensTable extends Migration
             $table->id();
             $table->string('token');
             $table->string('model');
-            $table->integer('ttl');
+            $table->dateTime('ttl');
             $table->unsignedBigInteger('model_id');
             $table->timestamps();
         });
