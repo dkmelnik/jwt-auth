@@ -20,6 +20,7 @@ class Token extends Model
 {
 
     protected $table = 'tokens';
+    protected const SEPARATOR_CHARACTER = "|";
     protected const CRYPT_ABC = [
         'a' => 1,
         'b' => 2,
@@ -86,10 +87,11 @@ class Token extends Model
         return strrev($out);
     }
 
-    static function decryptModelName(string $cryptStr): string
+    static function decryptToken(string $cryptStr): array
     {
+        $cutStr = stristr($cryptStr, self::SEPARATOR_CHARACTER);
         //заменяем буквенные символы на *
-        $newStr = strrev(preg_replace('/[^0-9]/', '*', $cryptStr));
+        $newStr = strrev(preg_replace('/[^0-9]/', '*', $cutStr));
         //добавляем в массив числа разделенные *
         $array = array_diff(explode("*", $newStr), array(''));
         $flipABC = self::flipCryptABC();
@@ -98,22 +100,26 @@ class Token extends Model
         foreach ($array as $item) {
             $out .= $flipABC[$item];
         }
-        return $out;
+        return [
+            "model" => $out,
+            "id" => stristr($cryptStr, self::SEPARATOR_CHARACTER, true)
+        ];
     }
 
-    static function generateToken()
+    static function generateToken($token): string
     {
-
+        return $token->model_id . self::SEPARATOR_CHARACTER . self::cryptModelName($token->model);
     }
 
 
     static function createToken(Model $model)
     {
+        self::decryptToken("11|fv81tcq5osd91mq12");
         $token = new self();
-        $token->token = 'London to Paris';
-        $token->model = class_basename($model);
-        $token->ttl = Carbon::now()->addDays(30)->format("Y-m-d H:i:s");
         $token->model_id = $model->id;
+        $token->model = class_basename($model);
+        $token->token = self::generateToken($token);
+        $token->ttl = Carbon::now()->addDays(30)->format("Y-m-d H:i:s");
         $token->save();
 
         return $token;
