@@ -20,7 +20,9 @@ trait HasToken
 
     public function refrashToken()
     {
+        Token::refrashToken($this);
     }
+
 
     public function getToken()
     {

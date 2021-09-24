@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 //$service = app('JwtService')
 //$service->decryptToken() //array('id' => 1, 'modelName' => 'User')
 //TODO: Доделать логику дешифровки ++
-//TODO: Доделать логику создания токена
+//TODO: Доделать логику создания токена ++
 //TODO: Доделать логику сброса токена
 //TODO: Зарегистрировать собственные роуты пакета (запросить токен, сбросить токен)
 //TODO: Сделать регистрацию роутов вариативной, в зависимости от конфига (зарегистрировать конфиг)
@@ -106,6 +106,11 @@ class Token extends Model
         ];
     }
 
+    static function refrashToken()
+    {
+
+    }
+
     static function generateToken($token): string
     {
         return $token->model_id . self::SEPARATOR_CHARACTER . self::cryptModelName($token->model);
@@ -114,7 +119,6 @@ class Token extends Model
 
     static function createToken(Model $model)
     {
-        self::decryptToken("11|fv81tcq5osd91mq12");
         $token = new self();
         $token->model_id = $model->id;
         $token->model = class_basename($model);
