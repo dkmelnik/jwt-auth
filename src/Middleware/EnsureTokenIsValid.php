@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace CyberLama\JwtAuth\Middleware;
 
 use Closure;
+use CyberLama\JwtAuth\JwtService;
 use Illuminate\Http\Request;
 
 class EnsureTokenIsValid
@@ -16,10 +17,10 @@ class EnsureTokenIsValid
      */
     public function handle(Request $request, Closure $next)
     {
-        dd($request->header("Authorization"));
-        if ($request->input('token') !== 'my-secret-token') {
-            return redirect('home');
-        }
+        /** @var  $service JwtService */
+        $service = app('JwtService');
+        $service->checkToken($request->header("Authorization"));
+
 
         return $next($request);
     }
