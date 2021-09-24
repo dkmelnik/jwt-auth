@@ -54,9 +54,6 @@ class Token extends Model
         return array_flip(self::CRYPT_ABC);
     }
 
-    protected $fillable = [
-        'token'
-    ];
 
     protected $casts = [
         'created_at' => 'datetime',
@@ -110,18 +107,15 @@ class Token extends Model
     }
 
 
-    static function create(Model $model)
+    static function createToken(Model $model)
     {
-        $tokenModel = new self();
+        $token = new self();
+        $token->token = 'London to Paris';
+        $token->model = class_basename($model);
+        $token->ttl = Carbon::now()->addDays(30)->format("Y-m-d H:i:s");
+        $token->model_id = $model->id;
+        $token->save();
 
-        $values = [
-            'token' => 'London to Paris',
-            'model' => class_basename($model),
-            'ttl' => Carbon::now()->addDays(30)->timestamp,
-            'model_id' => $model["id"],
-        ];
-
-        $tokenModel::create($values);
-
+        return $token;
     }
 }
