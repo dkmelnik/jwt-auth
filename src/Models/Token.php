@@ -101,8 +101,8 @@ class Token extends Model
             $out .= $flipABC[$item];
         }
         return [
-            "model" => $out,
-            "id" => stristr($cryptStr, self::SEPARATOR_CHARACTER, true)
+            "id" => stristr($cryptStr, self::SEPARATOR_CHARACTER, true),
+            "model" => $out
         ];
     }
 
