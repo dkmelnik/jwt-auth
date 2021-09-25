@@ -6,6 +6,7 @@ use App\Exceptions\EnsureTokenIsValidException;
 use CyberLama\JwtAuth\Models\Token;
 use Eloquent;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class JwtService
 {
@@ -40,11 +41,13 @@ class JwtService
             return throw new EnsureTokenIsValidException("Пользователь не авторизован", "401");
         }
 
-        dd($checkDatabaseRecord->get());
 
+        // если срок токена истек
+        $databaseRecordToArray = $checkDatabaseRecord->get()->first()->toArray();
+        $databaseRecordTtl = $databaseRecordToArray["ttl"];
 
-
-
-        dd("es", $id);
+        if(Carbon::now()->format("Y-m-d H:i:s") > $databaseRecordTtl){
+            return throw new EnsureTokenIsValidException("Пользователь не авторизован", "401");
+        }
     }
 }
