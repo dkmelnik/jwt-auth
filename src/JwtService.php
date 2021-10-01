@@ -78,10 +78,10 @@ class JwtService
             return false;
         }
 
-        if (!$token->relationModel instanceof Model) {
+        if (!$token->relationModel instanceof \Illuminate\Contracts\Auth\Authenticatable) {
             return false;
         }
-
+        \Auth::login($token->relationModel);
         return $token instanceof Token;
     }
 

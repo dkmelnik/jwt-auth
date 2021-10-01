@@ -2,19 +2,10 @@
 
 namespace CyberLama\JwtAuth\Models;
 
-use CyberLama\JwtAuth\Exception\TokenNotValid;
 use CyberLama\JwtAuth\JwtService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-
-//TODO: Сделать и зарегистрировать middleware на проверку токена и авторизацию, токен ++
-//TODO: должен проверяться через сервис ++
-//$service = app('JwtService')
-//$service->decryptToken() //array('id' => 1, 'modelName' => 'User')
-//TODO: Доделать логику дешифровки ++
-//TODO: Доделать логику создания токена ++
-//TODO: Сделать регистрацию роутов вариативной, в зависимости от конфига (зарегистрировать конфиг)
 
 class Token extends Model
 {
