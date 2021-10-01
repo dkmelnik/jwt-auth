@@ -48,6 +48,10 @@ class JwtService
     {
         $token = Token::getTokenInDecrypt($token);
 
+        if (!$token instanceof Token) {
+            return false;
+        }
+
         if (!$token->relationModel instanceof Model) {
             return false;
         }
