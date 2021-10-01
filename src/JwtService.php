@@ -37,7 +37,33 @@ class JwtService
         'x' => 24,
         'y' => 25,
         'z' => 26,
-        '_' => 27,
+        'A' => 27,
+        'B' => 28,
+        'C' => 29,
+        'D' => 30,
+        'E' => 31,
+        'F' => 32,
+        'G' => 33,
+        'H' => 34,
+        'I' => 35,
+        'J' => 36,
+        'K' => 37,
+        'L' => 38,
+        'M' => 39,
+        'N' => 40,
+        'O' => 41,
+        'P' => 42,
+        'Q' => 43,
+        'R' => 44,
+        'S' => 45,
+        'T' => 46,
+        'U' => 47,
+        'V' => 48,
+        'W' => 49,
+        'X' => 50,
+        'Y' => 51,
+        'Z' => 52,
+        '_' => 53,
     ];
 
     /**
@@ -79,11 +105,7 @@ class JwtService
             $model_name .= $flipABC[$item];
         }
 
-        $modelTransform = explode('_', $model_name);
-        $modelTransform = array_map(function ($item) {
-            return ucfirst($item);
-        }, $modelTransform);
-        $model_name = implode('\\', $modelTransform);
+        $model_name = str_replace("_", "\\", $model_name);
 
         return [$model_name, $model_id];
     }
@@ -92,7 +114,7 @@ class JwtService
     {
         $modelName = str_replace('\\', '_', $modelName);
 
-        $str = str_split(strtolower($modelName));
+        $str = str_split($modelName);
 
         $out = '';
         foreach ($str as $item) {
@@ -101,6 +123,7 @@ class JwtService
 
         return strrev($out);
     }
+
     protected function randomStr(int $length): string
     {
         $flipABC = $this->flipCryptABC();
@@ -111,6 +134,7 @@ class JwtService
 
         return $str;
     }
+
     protected function flipCryptABC(): array
     {
         return array_flip(self::CRYPT_ABC);
