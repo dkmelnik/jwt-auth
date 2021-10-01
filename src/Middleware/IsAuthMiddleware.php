@@ -2,12 +2,11 @@
 
 namespace CyberLama\JwtAuth\Middleware;
 
-use App\Exception\EnsureTokenIsValidException;
 use Closure;
 use CyberLama\JwtAuth\JwtService;
 use Illuminate\Http\Request;
 
-class EnsureTokenIsValid
+class IsAuthMiddleware
 {
     /**
      * Handle an incoming request.
@@ -15,13 +14,17 @@ class EnsureTokenIsValid
      * @param Request $request
      * @param Closure $next
      * @return mixed
-     * @throws \App\Exceptions\EnsureTokenIsValidException
+     * @throws \CyberLama\JwtAuth\Exception\TokenNotValid
      */
     public function handle(Request $request, Closure $next)
     {
         /** @var  $service JwtService */
-        $service = app('JwtService');
-        $service->checkToken($request->header("Authorization"));
+        $service = app(JwtService::class);
+        $token = str_replace('Bearer ', '', $request->header("Authorization"));
+
+        if (!$service->checkToken($token)) {
+            abort(401);
+        }
 
         return $next($request);
     }

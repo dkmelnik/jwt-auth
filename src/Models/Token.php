@@ -2,6 +2,8 @@
 
 namespace CyberLama\JwtAuth\Models;
 
+use CyberLama\JwtAuth\Exception\TokenNotValid;
+use CyberLama\JwtAuth\JwtService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -18,41 +20,6 @@ class Token extends Model
 {
 
     protected $table = 'tokens';
-    protected const SEPARATOR_CHARACTER = "|";
-    protected const CRYPT_ABC = [
-        'a' => 1,
-        'b' => 2,
-        'c' => 3,
-        'd' => 4,
-        'e' => 5,
-        'f' => 6,
-        'g' => 7,
-        'h' => 8,
-        'i' => 9,
-        'j' => 10,
-        'k' => 11,
-        'l' => 12,
-        'm' => 13,
-        'n' => 14,
-        'o' => 15,
-        'p' => 16,
-        'q' => 17,
-        'r' => 18,
-        's' => 19,
-        't' => 20,
-        'u' => 21,
-        'v' => 22,
-        'w' => 23,
-        'x' => 24,
-        'y' => 25,
-        'z' => 26,
-    ];
-
-    protected static function flipCryptABC(): array
-    {
-        return array_flip(self::CRYPT_ABC);
-    }
-
 
     protected $casts = [
         'created_at' => 'datetime',
@@ -60,70 +27,52 @@ class Token extends Model
     ];
 
 
-    static function randomStr(int $length): string
+    static function getTokenInDecrypt(string $cryptToken): ?self
     {
-        $flipABC = self::flipCryptABC();
-        $str = '';
-        for ($i = 0; $i < $length; $i++) {
-            $str .= $flipABC[rand(1, count($flipABC) - 1)];
-        }
+        /** @var JwtService $service */
+        $service = app(JwtService::class);
 
-        return $str;
+        list($model_name, $model_id) = $service->decrypt($cryptToken);
+
+        return self::whereModelId($model_id)
+            ->whereModel($model_name)
+            ->whereToken($cryptToken)
+            ->where('ttl', '>=', date('Y-m-d H:i:s'))
+            ->get()
+            ->first()
+        ;
     }
 
-    // CyberLama\JwtAuth\Models\Token::decryptModelName("nggtv81hd5fb91milb12")
-    // CyberLama\JwtAuth\Models\Token::cryptModelName("User")
-    static function cryptModelName(string $modelName): string
+    static function dropOldTokens(int $id, string $modelName)
     {
-        $str = str_split(strtolower($modelName));
-
-        $out = '';
-        foreach ($str as $item) {
-            $out .= self::CRYPT_ABC[$item] . self::randomStr(rand(1, 5));
-        }
-
-        return strrev($out);
+        self::whereModelId($id)
+            ->whereModel($modelName)
+            ->where('ttl', '<', date('Y-m-d H:i:s'))
+            ->delete()
+        ;
     }
 
-    static function decryptToken(string $cryptStr): array
+    static function createToken(Model $model): self
     {
-        $cutStr = stristr($cryptStr, self::SEPARATOR_CHARACTER);
-        //заменяем буквенные символы на *
-        $newStr = strrev(preg_replace('/[^0-9]/', '*', $cutStr));
-        //добавляем в массив числа разделенные *
-        $array = array_diff(explode("*", $newStr), array(''));
-        $flipABC = self::flipCryptABC();
+        /** @var JwtService $service */
+        $service = app(JwtService::class);
+        $modelName = get_class($model);
+        $ttl = Carbon::now()->addDays(30)->format("Y-m-d H:i:s");
 
-        $out = '';
-        foreach ($array as $item) {
-            $out .= $flipABC[$item];
-        }
-        return [
-            "id" => stristr($cryptStr, self::SEPARATOR_CHARACTER, true),
-            "model" => $out
-        ];
-    }
+        self::dropOldTokens($model->id, $modelName);
 
-    static function refrashToken()
-    {
-
-    }
-
-    static function generateToken($token): string
-    {
-        return $token->model_id . self::SEPARATOR_CHARACTER . self::cryptModelName($token->model);
-    }
-
-
-    static function createToken(Model $model)
-    {
         $token = new self();
         $token->model_id = $model->id;
-        $token->model = class_basename($model);
-        $token->token = self::generateToken($token);
-        $token->ttl = Carbon::now()->addDays(30)->format("Y-m-d H:i:s");
+        $token->model = $modelName;
+        $token->token = $service->generateToken($model->id, $modelName);
+        $token->ttl = $ttl;
         $token->save();
 
         return $token;
+    }
+
+    public function relationModel()
+    {
+        return $this->belongsTo($this->model, 'model_id', 'id');
     }
 }
